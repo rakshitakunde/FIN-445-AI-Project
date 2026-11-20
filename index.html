@@ -33,7 +33,8 @@ header p{margin:4px 0 0;color:var(--text-2);max-width:900px}
 .card h2{margin:0;font-size:16px;display:flex;align-items:center;gap:8px}
 .step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
 .sub{color:var(--text-2);font-size:12.5px;margin:3px 0 12px}
-.load{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+.load{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.load>div{min-width:0}
 .load h3{margin:0 0 6px;font-size:13px;color:var(--text-2);font-weight:600}
 .urlrow{display:flex;gap:6px}
 input[type=text],input[type=url],select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;min-width:0}
@@ -45,13 +46,29 @@ input[type=text],input[type=url],select{padding:8px 10px;border-radius:8px;borde
 .chip:hover{border-color:var(--accent);color:var(--text)}
 .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.drop{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;color:var(--text-2);font-size:13px;cursor:pointer}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:78px;border:1.5px dashed var(--border);border-radius:10px;padding:12px;text-align:center;color:var(--text-2);font-size:13px;cursor:pointer;overflow-wrap:anywhere}
+.drop b{color:var(--text)}
 .drop.over{border-color:var(--accent);background:var(--surface-2)}
 .tiny{font-size:11.5px;color:var(--muted);margin-top:6px}
 .status{margin-top:12px;font-size:13px;padding:8px 12px;border-radius:8px;background:var(--surface-2);display:none}
 .status.show{display:block}
 .status.err{border-left:3px solid var(--bad-text)}
 .status.ok{border-left:3px solid var(--good-text)}
+.pbar{height:6px;border-radius:3px;background:var(--border);margin-top:6px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.askgrid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+.hist{border-left:1px solid var(--border);padding-left:16px;min-width:0}
+.hist-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px}
+.hist-head span{font-size:12px;color:var(--muted)}
+.hist-nav{display:flex;gap:6px;margin:8px 0}
+.hist-nav .btn{padding:4px 8px;font-size:12px}
+.hist ol{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:560px;overflow:auto}
+.hist li button{width:100%;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 9px;font:inherit;cursor:pointer;color:var(--text)}
+.hist li button:hover{border-color:var(--accent)}
+.hist li button[aria-current=true]{border-color:var(--accent);background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
+.hist .hq{font-size:12.5px;font-weight:600;display:block}
+.hist .hs{font-size:11.5px;color:var(--text-2);display:block;margin-top:2px}
+.hist .hm{font-size:10.5px;color:var(--muted);display:block;margin-top:2px}
+.hist .empty{font-size:12px;color:var(--muted)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
@@ -110,6 +127,7 @@ table.data .n{text-align:right}
 .about ul{padding-left:18px}
 .hidden{display:none!important}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 0 24px}
+@media (max-width:1100px){.askgrid{grid-template-columns:1fr}.hist{border-left:0;padding-left:0;border-top:1px solid var(--border);padding-top:12px}}
 @media (max-width:960px){.load,.agrid,.builder,.about{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.wrap{padding:14px}}
 </style>
 </head>
@@ -132,8 +150,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 0 24px}
       </div>
       <div>
         <h3>Upload a file</h3>
-        <label class="drop" id="drop" for="file">Drop a .csv, .tsv or .json file here, or <u>browse</u><input type="file" id="file" accept=".csv,.tsv,.txt,.json" hidden></label>
-        <div class="tiny">Use this if a link won't load.</div>
+        <label class="drop" id="drop" for="file"><b>Drop a file here</b><span>or <u>browse</u> · .csv, .tsv, .txt or .json</span><input type="file" id="file" accept=".csv,.tsv,.txt,.json" hidden></label>
+        <div class="tiny">Large files (200 MB+) are read in chunks, with a progress bar. Use this if a link won't load.</div>
       </div>
       <div>
         <h3>Or try a sample business dataset</h3>
@@ -145,31 +163,45 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 0 24px}
   </section>
 
   <div id="app" class="hidden" style="display:grid;gap:16px">
-    <div class="dsname" id="dsname"></div>
-    <section class="kpis" id="kpis" aria-label="Dataset summary"></section>
-
-    <section class="card" aria-labelledby="h-ask">
-      <h2 id="h-ask"><span class="step">2</span>Ask the analyst</h2>
-      <div class="sub">Ask a question in plain English and mention the column names. The analyst works out what you mean, writes the SQL, runs it and explains the result. The suggestions below come from your dataset's own columns.</div>
-      <form class="ask" id="ask-form" autocomplete="off"><input type="text" id="ask" aria-label="Ask a question about your data" placeholder="e.g. average salary by department"><button class="btn primary" type="submit">Ask</button></form>
-      <div class="chips" id="suggest" style="margin-top:8px"></div>
-      <div class="answer" id="answer">
-        <div class="say" id="say"></div>
-        <div class="agrid">
-          <div><div class="chart" id="a-chart"></div><div id="a-stats"></div></div>
-          <div><p class="label">Generated SQL</p><pre class="sql" id="a-sql"></pre><p class="label" style="margin-top:10px">How the question was interpreted</p><div id="a-interp" style="font-size:12.5px;color:var(--text-2)"></div><div id="a-table" style="margin-top:10px"></div></div>
-        </div>
-      </div>
+    <section class="card" aria-labelledby="h-prev">
+      <h2 id="h-prev"><span class="step">2</span>Preview your data</h2>
+      <div class="sub" id="dsname"></div>
+      <section class="kpis" id="kpis" aria-label="Dataset summary"></section>
+      <div class="sub" id="prev-sub" style="margin:14px 0 8px"></div>
+      <div class="scroll"><table class="data" id="preview"></table></div>
     </section>
 
     <section class="card" aria-labelledby="h-ins">
       <h2 id="h-ins"><span class="step">3</span>Automatic insights</h2>
-      <div class="sub">Patterns the analyst found without being asked: correlations, dominant categories, skew, outliers, missing data and time range.</div>
+      <div class="sub">What stands out in the data, found without asking: size, data quality, correlations, dominant categories, skew, outliers and time range.</div>
       <ul class="insights" id="insights"></ul>
     </section>
 
+    <section class="card" aria-labelledby="h-ask">
+      <h2 id="h-ask"><span class="step">4</span>Ask the analyst</h2>
+      <div class="sub">Dig deeper with your own questions in plain English, mentioning column names. The analyst works out what you mean, writes the SQL, runs it and explains the result. Every question is saved in the history panel so you can go back to it.</div>
+      <div class="askgrid">
+        <div style="min-width:0">
+          <form class="ask" id="ask-form" autocomplete="off"><input type="text" id="ask" aria-label="Ask a question about your data" placeholder="e.g. average salary by department"><button class="btn primary" type="submit">Ask</button></form>
+          <div class="chips" id="suggest" style="margin-top:8px"></div>
+          <div class="answer" id="answer">
+            <div class="say" id="say"></div>
+            <div class="agrid">
+              <div><div class="chart" id="a-chart"></div><div id="a-stats"></div></div>
+              <div><p class="label">Generated SQL</p><pre class="sql" id="a-sql"></pre><p class="label" style="margin-top:10px">How the question was interpreted</p><div id="a-interp" style="font-size:12.5px;color:var(--text-2)"></div><div id="a-table" style="margin-top:10px"></div></div>
+            </div>
+          </div>
+        </div>
+        <aside class="hist" aria-labelledby="h-hist">
+          <div class="hist-head"><b id="h-hist">Question history</b><span id="h-count"></span></div>
+          <div class="hist-nav"><button class="btn" id="h-older" type="button">← Older</button><button class="btn" id="h-newer" type="button">Newer →</button><button class="btn" id="h-clear" type="button">Clear</button></div>
+          <ol id="h-list"></ol>
+        </aside>
+      </div>
+    </section>
+
     <section class="card" aria-labelledby="h-build">
-      <h2 id="h-build"><span class="step">4</span>Build a chart</h2>
+      <h2 id="h-build"><span class="step">5</span>Build a chart</h2>
       <div class="sub">Pick columns and settings. The chart and its statistics recalculate as soon as you change anything.</div>
       <div class="builder">
         <div>
@@ -188,15 +220,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 0 24px}
     </section>
 
     <section class="card">
-      <h2>Column profile</h2>
+      <h2>Column details</h2>
       <div class="sub">What the analyst detected for each column: its type, how complete it is, and a quick summary.</div>
       <div class="scroll"><table class="data" id="profile"></table></div>
-    </section>
-
-    <section class="card">
-      <h2>Data preview</h2>
-      <div class="sub" id="prev-sub"></div>
-      <div class="scroll"><table class="data" id="preview"></table></div>
     </section>
   </div>
 
@@ -209,7 +235,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 0 24px}
         <li><b>Natural-language query engine:</b> matches your words to columns and values, detects the analysis type (aggregate, group, trend, correlation, distribution, share) and generates SQL.</li>
         <li><b>Statistics:</b> Pearson correlation, linear regression, quartiles, IQR outlier detection, skew.</li>
       </ul></div>
-      <div><h4>Limitations</h4><p>The query engine is rule-based and runs entirely in the browser, so it needs no API key, login or server. As a result it understands analysis questions about the loaded data, not open-ended conversation. A link loads only if its host allows it; otherwise download the file and upload it. Very large files are capped at 50,000 rows.</p></div>
+      <div><h4>Limitations</h4><p>The query engine is rule-based and runs entirely in the browser, so it needs no API key, login or server. As a result it understands analysis questions about the loaded data, not open-ended conversation. A link loads only if its host allows it; otherwise download the file and upload it. Large files are streamed in chunks; up to 5 million rows are loaded.</p></div>
     </div>
   </section>
   <footer>Ask Your Data · Built by Rakshita Kunde</footer>
@@ -222,6 +248,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 0 24px}
 var $=function(id){return document.getElementById(id);};
 var MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 var MONL=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function ok(v){return v!=null&&v===v;}
+function arrMin(a){var m=Infinity;for(var i=0;i<a.length;i++)if(a[i]<m)m=a[i];return m;}
+function arrMax(a){var m=-Infinity;for(var i=0;i<a.length;i++)if(a[i]>m)m=a[i];return m;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 
@@ -235,18 +264,27 @@ function fmtDate(t,p){var d=new Date(t);if(p==='year')return String(d.getUTCFull
 function pct(v){return(v*100).toFixed(1)+'%';}
 
 // ============ Parsing ============
-function parseCSV(text){
- text=text.replace(/^﻿/,'');var first=text.split(/\r?\n/,1)[0];
- var delim=[',',';','\t','|'].map(function(d){return[d,first.split(d).length];}).sort(function(a,b){return b[1]-a[1];})[0][0];
- var rows=[],row=[],f='',q=false;
- for(var i=0;i<text.length;i++){var c=text[i];
-  if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
-  else if(c==='"'&&f==='')q=true;else if(c===delim){row.push(f);f='';}
-  else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f='';}
-  else f+=c;}
- if(f!==''||row.length){row.push(f);rows.push(row);}
- return rows.filter(function(r){return!(r.length===1&&r[0].trim()==='');});
-}
+// Streaming CSV parser: handles quotes, embedded newlines, and any chunk boundaries
+function makeParser(onRow){var buf='',delim=null,row=[],field='',inQ=false,afterQ=false,first=true;
+ function detect(line){return[',',';','\t','|'].map(function(d){var c=0,q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"')q=!q;else if(!q&&ch===d)c++;}return[d,c];}).sort(function(a,b){return b[1]-a[1];})[0][0];}
+ function push(chunk,final){if(first&&chunk){chunk=chunk.replace(/^﻿/,'');first=false;}buf+=chunk;
+  if(delim==null){var nl=buf.search(/\r|\n/);if(nl<0&&!final)return;delim=detect(nl<0?buf:buf.slice(0,nl));}
+  var DC=delim.charCodeAt(0),i=0,n=buf.length;
+  while(i<n){
+   if(inQ){var j=buf.indexOf('"',i);if(j<0){field+=buf.slice(i);i=n;break;}
+    if(j+1>=n&&!final){field+=buf.slice(i,j);i=j;break;}
+    if(buf.charCodeAt(j+1)===34){field+=buf.slice(i,j+1);i=j+2;continue;}
+    field+=buf.slice(i,j);i=j+1;inQ=false;afterQ=true;continue;}
+   if(buf.charCodeAt(i)===34&&field===''&&!afterQ){inQ=true;i++;continue;}
+   var k=i;while(k<n){var cc=buf.charCodeAt(k);if(cc===DC||cc===10||cc===13)break;k++;}
+   if(k>=n&&!final)break;
+   field+=buf.slice(i,k);i=k;if(i>=n)break;
+   var c2=buf.charCodeAt(i);
+   if(c2===DC){row.push(field);field='';afterQ=false;i++;}
+   else{if(c2===13){if(i+1>=n&&!final)break;if(buf.charCodeAt(i+1)===10)i++;}row.push(field);field='';afterQ=false;onRow(row);row=[];i++;}}
+  buf=buf.slice(i);
+  if(final){if(field!==''||row.length){row.push(field);onRow(row);}row=[];field='';buf='';}}
+ return{push:push};}
 var MISSING=/^(|na|n\/a|null|nan|none|-|\?|#n\/a)$/i;
 function toNum(s){var t=String(s).trim().replace(/[$€£¥,\s]/g,'');if(/%$/.test(t))t=t.slice(0,-1);if(/^\(.*\)$/.test(t))t='-'+t.slice(1,-1);
  if(!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(t))return NaN;return parseFloat(t);}
@@ -256,43 +294,59 @@ function parseDate(s){s=String(s).trim();var m;
  if((m=s.match(/^([A-Za-z]{3,9})\.?\s+(?:(\d{1,2}),?\s+)?(\d{4})$/))){var mi=MON.indexOf(m[1].slice(0,3).toLowerCase());if(mi>=0)return Date.UTC(+m[3],mi,m[2]?+m[2]:1);}
  return null;}
 
-var D=null;
-function build(rows,name){
- var header=rows[0].map(function(h,i){h=String(h).trim();return h||('column_'+(i+1));});
- var seen={};header=header.map(function(h){if(seen[h]){seen[h]++;return h+'_'+seen[h];}seen[h]=1;return h;});
- var body=rows.slice(1),capped=false;if(body.length>50000){body=body.slice(0,50000);capped=true;}
- var n=body.length,cols=header.map(function(h,j){
-  var raw=body.map(function(r){var v=r[j];return v==null?'':String(v).trim();});
-  var nm=raw.filter(function(v){return!MISSING.test(v);});
-  var numOK=nm.filter(function(v){return isFinite(toNum(v));}).length,dateOK=0;
-  var type='text';
-  if(nm.length&&numOK>=0.9*nm.length)type='number';
-  else if(nm.length){dateOK=nm.filter(function(v){return parseDate(v)!=null;}).length;if(dateOK>=0.9*nm.length)type='date';}
-  var values=raw.map(function(v){if(MISSING.test(v))return null;if(type==='number'){var x=toNum(v);return isFinite(x)?x:null;}if(type==='date')return parseDate(v);return v;});
-  return{name:h,type:type,values:values};});
+var D=null,MAXROWS=5000000;
+function cleanHeader(r){var seen={};return r.map(function(h,i){h=String(h).trim();return h||('column_'+(i+1));}).map(function(h){if(seen[h]){seen[h]++;return h+'_'+seen[h];}seen[h]=1;return h;});}
+// Loader: infers column types from the first 5,000 rows, then stores values compactly
+// (numbers/dates in Float64Arrays with NaN = missing; text as shared/interned strings).
+function Loader(name){this.name=name;this.header=null;this.buf=[];this.cols=null;this.n=0;this.trunc=false;}
+Loader.prototype.row=function(r){if(r.length===1&&r[0].trim()==='')return;if(!this.header){this.header=cleanHeader(r);return;}
+ if(!this.cols){this.buf.push(r);if(this.buf.length>=5000)this.init();return;}this.add(r);};
+Loader.prototype.init=function(){var self=this;
+ this.cols=this.header.map(function(h,j){var raw=self.buf.map(function(r){var v=r[j];return v==null?'':String(v).trim();});
+  var nm=raw.filter(function(v){return!MISSING.test(v);}),numOK=0,type='text';nm.forEach(function(v){if(isFinite(toNum(v)))numOK++;});
+  if(nm.length&&numOK>=0.9*nm.length)type='number';else if(nm.length){var dOK=0;nm.forEach(function(v){if(parseDate(v)!=null)dOK++;});if(dOK>=0.9*nm.length)type='date';}
+  return{name:h,type:type,store:type==='text'?[]:new Float64Array(8192),intern:type==='text'?new Map():null,bad:0};});
+ var b=this.buf;this.buf=null;for(var i=0;i<b.length;i++)this.add(b[i]);};
+Loader.prototype.add=function(r){if(this.n>=MAXROWS){this.trunc=true;return;}var n=this.n,cols=this.cols;
+ for(var j=0;j<cols.length;j++){var c=cols[j],raw=r[j];if(raw==null)raw='';
+  var L=raw.length;if(L&&(raw.charCodeAt(0)<=32||raw.charCodeAt(L-1)<=32)){raw=raw.trim();L=raw.length;}
+  var miss=L===0||(L<=4&&MISSING.test(raw));
+  if(c.type==='text'){var v=null;if(!miss){v=c.intern.get(raw);if(v===undefined){v=raw;if(c.intern.size<200000)c.intern.set(raw,raw);}}c.store.push(v);}
+  else{if(n>=c.store.length){var na=new Float64Array(c.store.length*2);na.set(c.store);c.store=na;}
+   var x=NaN;if(!miss){if(c.type==='number'){x=+raw;if(x!==x||!isFinite(x)){x=toNum(raw);if(!isFinite(x)){x=NaN;c.bad++;}}}else{x=parseDate(raw);if(x==null){x=NaN;c.bad++;}}}
+   c.store[n]=x;}}
+ this.n=n+1;};
+Loader.prototype.finish=function(){if(!this.header)throw new Error('The file is empty.');if(!this.cols)this.init();var n=this.n;if(!n)throw new Error('No data rows found under the header.');
+ return this.cols.map(function(c){return{name:c.name,type:c.type,values:c.type==='text'?c.store:c.store.slice(0,n),bad:c.bad};});};
+function buildFromCols(cols,n,name,trunc){
  cols.forEach(function(c){c.stats=colStats(c,n);});
  cols.forEach(function(c){c.idlike=isIdLike(c,n);c.groupable=!c.idlike&&(c.type==='text'||(c.type==='number'&&c.stats.unique<=15&&c.stats.unique>=2));});
- D={name:name,table:sqlName(name),n:n,cols:cols,capped:capped};
- onLoaded();
-}
-function isIdLike(c,n){var nm=c.name.toLowerCase();if(/(^|[_\s])id$|^id[_\s]|^id$|index|uuid|zip|phone/.test(nm))return true;if(c.type==='text'&&c.stats.unique>0.9*n&&n>30)return true;if(c.type==='number'&&c.stats.unique===c.stats.count&&n>30){var v=c.values.filter(function(x){return x!=null;});var inc=0;for(var i=1;i<v.length;i++)if(v[i]===v[i-1]+1)inc++;return inc>0.9*v.length;}return false;}
+ D={name:name,table:sqlName(name),n:n,cols:cols,capped:trunc};onLoaded();}
+function isIdLike(c,n){var nm=c.name.toLowerCase();if(/(^|[_\s])id$|^id[_\s]|^id$|index|uuid|zip|phone/.test(nm))return true;if(c.type==='text'&&c.stats.unique>0.9*n&&n>30)return true;if(c.type==='number'&&c.stats.unique===c.stats.count&&n>30){var v=c.values.filter(ok);var inc=0;for(var i=1;i<v.length;i++)if(v[i]===v[i-1]+1)inc++;return inc>0.9*v.length;}return false;}
 function sqlName(s){var b=String(s).replace(/\.[a-z]+$/i,'').replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'').toLowerCase();if(!b)b='dataset';if(/^\d/.test(b))b='t_'+b;return b;}
 function qid(s){return /^[a-z_][a-z0-9_]*$/i.test(s)?s:'"'+s.replace(/"/g,'""')+'"';}
 function sorted(a){return a.slice().sort(function(x,y){return x-y;});}
 function quant(s,p){if(!s.length)return null;var i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
-function colStats(c,n){var v=c.values.filter(function(x){return x!=null;}),st={count:v.length,missing:n-v.length,unique:new Set(v).size};
- if(c.type==='number'&&v.length){var s=sorted(v),sum=v.reduce(function(a,b){return a+b;},0),mean=sum/v.length,sd=Math.sqrt(v.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/Math.max(1,v.length-1));
-  var q1=quant(s,.25),q3=quant(s,.75),iqr=q3-q1;st.sum=sum;st.mean=mean;st.sd=sd;st.min=s[0];st.max=s[s.length-1];st.median=quant(s,.5);st.q1=q1;st.q3=q3;
-  st.outliers=v.filter(function(x){return x<q1-1.5*iqr||x>q3+1.5*iqr;}).length;st.skew=sd?3*(mean-st.median)/sd:0;}
- if(c.type==='date'&&v.length){st.min=Math.min.apply(null,v);st.max=Math.max.apply(null,v);}
- if(c.type==='text'||c.type==='number'){var cnt=new Map();v.forEach(function(x){cnt.set(x,(cnt.get(x)||0)+1);});st.top=Array.from(cnt.entries()).sort(function(a,b){return b[1]-a[1];}).slice(0,200);}
+function colStats(c,n){var vals=c.values,v;
+ if(vals instanceof Float64Array){var k=0;v=new Float64Array(vals.length);for(var i=0;i<vals.length;i++){var x=vals[i];if(x===x)v[k++]=x;}v=v.subarray(0,k);}
+ else v=vals.filter(function(x){return x!=null&&x===x;});
+ var st={count:v.length,missing:n-v.length},set=new Set(),CAP=100000,capped=false;
+ for(var u=0;u<v.length;u++){set.add(v[u]);if(set.size>CAP){capped=true;break;}}
+ st.unique=capped?Infinity:set.size;st.uniqueCapped=capped;set=null;
+ if(c.type==='number'&&v.length){var s=Float64Array.from(v).sort(),sum=0;for(var a=0;a<s.length;a++)sum+=s[a];var mean=sum/s.length,ss=0;for(a=0;a<s.length;a++)ss+=(s[a]-mean)*(s[a]-mean);var sd=Math.sqrt(ss/Math.max(1,s.length-1));
+  var q1=quant(s,.25),q3=quant(s,.75),iqr=q3-q1,lo=q1-1.5*iqr,hi=q3+1.5*iqr,out=0;for(a=0;a<s.length;a++)if(s[a]<lo||s[a]>hi)out++;
+  st.sum=sum;st.mean=mean;st.sd=sd;st.min=s[0];st.max=s[s.length-1];st.median=quant(s,.5);st.q1=q1;st.q3=q3;st.outliers=out;st.skew=sd?3*(mean-st.median)/sd:0;}
+ if(c.type==='date'&&v.length){st.min=arrMin(v);st.max=arrMax(v);}
+ st.top=[];
+ if(c.type==='text'||(c.type==='number'&&!capped&&st.unique<=200)){var cnt=new Map();for(var t=0;t<v.length;t++){var y=v[t],e=cnt.get(y);if(e!==undefined)cnt.set(y,e+1);else if(cnt.size<50000)cnt.set(y,1);}st.top=Array.from(cnt.entries()).sort(function(p,q){return q[1]-p[1];}).slice(0,200);}
  return st;}
+function fmtUnique(st){return st.uniqueCapped?'100,000+':st.unique.toLocaleString();}
 
 // ============ Statistics helpers ============
-function aggregate(vals,how){var v=vals.filter(function(x){return x!=null;});
+function aggregate(vals,how){var v=vals.filter(ok);
  if(how==='count')return v.length;if(how==='rows')return vals.length;if(!v.length)return null;
  if(how==='sum')return v.reduce(function(a,b){return a+b;},0);if(how==='mean')return v.reduce(function(a,b){return a+b;},0)/v.length;
- if(how==='median')return quant(sorted(v),.5);if(how==='min')return Math.min.apply(null,v);if(how==='max')return Math.max.apply(null,v);return null;}
+ if(how==='median')return quant(sorted(v),.5);if(how==='min')return arrMin(v);if(how==='max')return arrMax(v);return null;}
 var AGGW={sum:'total',mean:'average',median:'median',min:'minimum',max:'maximum',count:'count of',rows:'number of rows'};
 var AGGSQL={sum:'SUM',mean:'AVG',median:'MEDIAN',min:'MIN',max:'MAX',count:'COUNT'};
 function pearson(x,y){var n=x.length;if(n<3)return null;var mx=0,my=0;for(var i=0;i<n;i++){mx+=x[i];my+=y[i];}mx/=n;my/=n;var sxy=0,sxx=0,syy=0;for(i=0;i<n;i++){var dx=x[i]-mx,dy=y[i]-my;sxy+=dx*dy;sxx+=dx*dx;syy+=dy*dy;}if(!sxx||!syy)return null;var b=sxy/sxx;return{r:sxy/Math.sqrt(sxx*syy),slope:b,intercept:my-b*mx,n:n};}
@@ -304,8 +358,8 @@ function niceTicks(min,max,count){if(max===min){max=min+1;}var step=niceStep((ma
 
 // ============ Query execution (shared by Ask and the chart builder) ============
 function rowIndex(filters){var idx=[];for(var i=0;i<D.n;i++){var ok=true;for(var k=0;k<filters.length&&ok;k++){var f=filters[k],v=D.cols[f.col].values[i];
-  if(f.op==='in')ok=f.vals.indexOf(v)>=0;else if(f.op==='year')ok=v!=null&&new Date(v).getUTCFullYear()===f.val;
-  else{if(v==null){ok=false;break;}ok=f.op==='>'?v>f.val:f.op==='<'?v<f.val:f.op==='>='?v>=f.val:f.op==='<='?v<=f.val:v===f.val;}}
+  if(f.op==='in')ok=f.vals.indexOf(v)>=0;else if(f.op==='year')ok=v!=null&&v===v&&new Date(v).getUTCFullYear()===f.val;
+  else{if(v==null||v!==v){ok=false;break;}ok=f.op==='>'?v>f.val:f.op==='<'?v<f.val:f.op==='>='?v>=f.val:f.op==='<='?v<=f.val:v===f.val;}}
   if(ok)idx.push(i);}return idx;}
 function pick(c,idx){var v=D.cols[c].values;return idx.map(function(i){return v[i];});}
 function whereSQL(filters){if(!filters.length)return'';return'\nWHERE '+filters.map(function(f){var c=qid(D.cols[f.col].name);
@@ -323,14 +377,14 @@ function run(spec){
   res.sql='SELECT '+AGGSQL[spec.agg]+'('+qid(c.name)+') AS '+spec.agg+'_'+sqlName(c.name)+'\nFROM '+T+W+';';res.chart={type:'value',value:fmtNum(v),label:AGGW[spec.agg]+' '+c.name};
   res.stats=numStats(pick(spec.measure,idx));return res;}
  if(k==='describe'){var c2=D.cols[spec.measure],vals=pick(spec.measure,idx);
-  if(c2.type==='number'){var st=numStats(vals),nn=vals.filter(function(x){return x!=null;}).length;
-   res.say='<b>'+esc(c2.name)+'</b>'+filterText(F)+' ranges from <b>'+fullNum(st.min)+'</b> to <b>'+fullNum(st.max)+'</b>, with an average of <b>'+fullNum(st.mean)+'</b> and a median of <b>'+fullNum(st.median)+'</b>. '+skewText(st,c2.name)+(st.outliers?' There are '+st.outliers+' outliers (values far outside the typical range).':'');
+  if(c2.type==='number'){var st=numStats(vals),nn=vals.filter(ok).length;
+   res.say='<b>'+esc(c2.name)+'</b>'+filterText(F)+' ranges from <b>'+fullNum(st.min)+'</b> to <b>'+fullNum(st.max)+'</b>, with an average of <b>'+fullNum(st.mean)+'</b> and a median of <b>'+fullNum(st.median)+'</b>. '+skewText(st,c2.name)+(st.outliers?' There are '+st.outliers.toLocaleString()+' outliers (values far outside the typical range).':'');
    res.stats=st;res.sql='SELECT COUNT('+qid(c2.name)+') AS n, AVG('+qid(c2.name)+') AS mean, MEDIAN('+qid(c2.name)+') AS median,\n       STDDEV('+qid(c2.name)+') AS sd, MIN('+qid(c2.name)+') AS min, MAX('+qid(c2.name)+') AS max\nFROM '+T+W+';';
    var h=histogram(vals,spec.bins||15);res.chart={type:'hist',bins:h,xName:c2.name};return res;}
-  if(c2.type==='date'){var dv=vals.filter(function(x){return x!=null;});res.say='<b>'+esc(c2.name)+'</b> runs from <b>'+fmtDate(Math.min.apply(null,dv),'day')+'</b> to <b>'+fmtDate(Math.max.apply(null,dv),'day')+'</b>.';spec.kind='time';spec.measure=null;spec.agg='rows';spec.group=spec.measure2!=null?spec.measure2:D.cols.indexOf(c2);spec.group=D.cols.indexOf(c2);var r2=run(spec);r2.say=res.say+' '+r2.say;return r2;}
+  if(c2.type==='date'){var dv=vals.filter(ok);res.say='<b>'+esc(c2.name)+'</b> runs from <b>'+fmtDate(arrMin(dv),'day')+'</b> to <b>'+fmtDate(arrMax(dv),'day')+'</b>.';spec.kind='time';spec.measure=null;spec.agg='rows';spec.group=spec.measure2!=null?spec.measure2:D.cols.indexOf(c2);spec.group=D.cols.indexOf(c2);var r2=run(spec);r2.say=res.say+' '+r2.say;return r2;}
   spec.kind='group';spec.group=spec.measure;spec.measure=null;spec.agg='rows';spec.sort=spec.sort||'desc';return run(spec);}
  if(k==='group'){var g=D.cols[spec.group],mc=spec.measure!=null?D.cols[spec.measure]:null,gv=g.values,mv=mc?mc.values:null,mp=new Map();
-  idx.forEach(function(i){var key=gv[i];if(key==null)key='(missing)';if(!mp.has(key))mp.set(key,[]);mp.get(key).push(mv?mv[i]:1);});
+  idx.forEach(function(i){var key=gv[i];if(key==null||key!==key)key='(missing)';if(!mp.has(key))mp.set(key,[]);mp.get(key).push(mv?mv[i]:1);});
   var agg=mc?spec.agg:'rows',items=[];mp.forEach(function(arr,key){items.push({label:String(key),key:key,value:aggregate(arr,agg),n:arr.length});});
   items=items.filter(function(d){return d.value!=null;});
   var srt=spec.sort||'desc';items.sort(function(a,b){if(srt==='key'){return typeof a.key==='number'&&typeof b.key==='number'?a.key-b.key:String(a.key).localeCompare(String(b.key));}return srt==='asc'?a.value-b.value:b.value-a.value;});
@@ -341,12 +395,12 @@ function run(spec){
   if(shown.length>1&&srt!=='key')s+=' Next: '+shown.slice(1,3).map(function(d){return esc(d.label)+' ('+fmtNum(d.value)+')';}).join(', ')+'.';
   if(all>3&&srt!=='key'){var last=items[items.length-1];s+=' '+(srt==='asc'?'Highest':'Lowest')+': '+esc(last.label)+' ('+fmtNum(last.value)+').';}
   if(all>lim)s+='<span class="note">Showing '+lim+' of '+all+' groups.</span>';
-  if(mc&&agg!=='sum'&&agg!=='count'&&all>1){var mx=Math.max.apply(null,items.map(function(d){return d.value;})),mn=Math.min.apply(null,items.map(function(d){return d.value;}));if(mn>0)s+='<span class="note">The highest group is '+(mx/mn).toFixed(2)+'× the lowest.</span>';}
+  if(mc&&agg!=='sum'&&agg!=='count'&&all>1){var mx=arrMax(items.map(function(d){return d.value;})),mn=arrMin(items.map(function(d){return d.value;}));if(mn>0)s+='<span class="note">The highest group is '+(mx/mn).toFixed(2)+'× the lowest.</span>';}
   res.say=s;res.items=items;
   res.sql='SELECT '+qid(g.name)+',\n       '+(mc?AGGSQL[agg]+'('+qid(mc.name)+') AS '+agg+'_'+sqlName(mc.name):'COUNT(*) AS row_count')+(mc?',\n       COUNT(*) AS n':'')+'\nFROM '+T+W+'\nGROUP BY '+qid(g.name)+'\nORDER BY '+(srt==='key'?qid(g.name):(mc?agg+'_'+sqlName(mc.name):'row_count')+(srt==='asc'?' ASC':' DESC'))+(spec.limit?'\nLIMIT '+spec.limit:'')+';';
   res.chart={type:'bar',items:shown,label:mname,share:additive};res.table={head:[g.name,mname,mc?'rows':'share'],rows:items.slice(0,50).map(function(d){return[d.label,fullNum(d.value),mc?d.n.toLocaleString():(total?pct(d.value/total):'')];})};return res;}
  if(k==='time'){var dc=D.cols[spec.group],per=spec.period||autoPeriod(dc),mc2=spec.measure!=null?D.cols[spec.measure]:null,agg2=mc2?spec.agg:'rows',mp2=new Map();
-  idx.forEach(function(i){var t=dc.values[i];if(t==null)return;var key=periodKey(t,per);if(!mp2.has(key))mp2.set(key,[]);mp2.get(key).push(mc2?mc2.values[i]:1);});
+  idx.forEach(function(i){var t=dc.values[i];if(t==null||t!==t)return;var key=periodKey(t,per);if(!mp2.has(key))mp2.set(key,[]);mp2.get(key).push(mc2?mc2.values[i]:1);});
   var pts=Array.from(mp2.entries()).map(function(e){return{key:e[0],value:aggregate(e[1],agg2)};}).filter(function(p){return p.value!=null;}).sort(function(a,b){return a.key-b.key;});
   var mname2=mc2?AGGW[agg2]+' '+mc2.name:'number of rows';
   if(pts.length<2){res.say='Only one '+per+' of data is available, so there is no trend to show.';return res;}
@@ -357,23 +411,23 @@ function run(spec){
   res.sql='SELECT DATE_TRUNC(\''+unit+'\', '+qid(dc.name)+') AS '+per+',\n       '+(mc2?AGGSQL[agg2]+'('+qid(mc2.name)+') AS '+agg2+'_'+sqlName(mc2.name):'COUNT(*) AS row_count')+'\nFROM '+T+W+'\nGROUP BY 1\nORDER BY 1;';
   res.chart={type:'line',labels:pts.map(function(p){return fmtDate(p.key,per==='day'||per==='week'?'day':per);}),values:pts.map(function(p){return p.value;}),label:mname2};
   res.table={head:[per,mname2],rows:pts.slice(-50).map(function(p){return[fmtDate(p.key,per==='week'?'day':per),fullNum(p.value)];})};return res;}
- if(k==='scatter'){var xc=D.cols[spec.x],yc=D.cols[spec.y],xs=[],ys=[];idx.forEach(function(i){var a=xc.values[i],b=yc.values[i];if(a!=null&&b!=null){xs.push(a);ys.push(b);}});
+ if(k==='scatter'){var xc=D.cols[spec.x],yc=D.cols[spec.y],xs=[],ys=[];idx.forEach(function(i){var a=xc.values[i],b=yc.values[i];if(ok(a)&&ok(b)){xs.push(a);ys.push(b);}});
   var p=pearson(xs,ys);if(!p){res.say='Not enough paired values to compare '+esc(xc.name)+' and '+esc(yc.name)+'.';return res;}
   res.say='<b>'+esc(xc.name)+'</b> and <b>'+esc(yc.name)+'</b> have a <b>'+strength(p.r)+' '+(p.r>=0?'positive':'negative')+'</b> relationship'+filterText(F)+' (correlation r = <b>'+p.r.toFixed(2)+'</b>). '+(Math.abs(p.r)>=0.2?'As '+esc(xc.name)+' goes up, '+esc(yc.name)+' tends to go '+(p.r>=0?'up':'down')+'. ':'')+'A straight-line fit gives '+esc(yc.name)+' ≈ '+fullNum(p.intercept)+' '+(p.slope>=0?'+':'−')+' '+fullNum(Math.abs(p.slope))+' × '+esc(xc.name)+', which explains '+pct(p.r*p.r)+' of the variation.<span class="note">Correlation shows the two move together. It does not prove one causes the other.</span>';
   res.sql='SELECT CORR('+qid(xc.name)+', '+qid(yc.name)+') AS r,\n       REGR_SLOPE('+qid(yc.name)+', '+qid(xc.name)+') AS slope,\n       REGR_INTERCEPT('+qid(yc.name)+', '+qid(xc.name)+') AS intercept,\n       COUNT(*) AS n\nFROM '+T+W+(W?'\n  AND ':'\nWHERE ')+qid(xc.name)+' IS NOT NULL AND '+qid(yc.name)+' IS NOT NULL;';
   res.chart={type:'scatter',xs:xs,ys:ys,xName:xc.name,yName:yc.name,fit:p};res.statsList=[['Correlation (r)',p.r.toFixed(3)],['R²',(p.r*p.r).toFixed(3)],['Slope',fullNum(p.slope)],['Intercept',fullNum(p.intercept)],['Points',p.n.toLocaleString()],['Strength',strength(p.r)]];return res;}
  if(k==='hist'){var hc=D.cols[spec.x],hv=pick(spec.x,idx),hs=numStats(hv),hb=histogram(hv,spec.bins||15),mode=hb.reduce(function(a,b){return b.count>a.count?b:a;});
-  res.say='Most values of <b>'+esc(hc.name)+'</b>'+filterText(F)+' fall between <b>'+fullNum(hs.q1)+'</b> and <b>'+fullNum(hs.q3)+'</b> (the middle 50%). The most common range is '+fullNum(mode.lo)+'–'+fullNum(mode.hi)+'. '+skewText(hs,hc.name)+(hs.outliers?' '+hs.outliers+' values are outliers.':'');
+  res.say='Most values of <b>'+esc(hc.name)+'</b>'+filterText(F)+' fall between <b>'+fullNum(hs.q1)+'</b> and <b>'+fullNum(hs.q3)+'</b> (the middle 50%). The most common range is '+fullNum(mode.lo)+'–'+fullNum(mode.hi)+'. '+skewText(hs,hc.name)+(hs.outliers?' '+hs.outliers.toLocaleString()+' values are outliers.':'');
   var bw0=String(+(hb[0].hi-hb[0].lo).toFixed(10));res.sql='SELECT FLOOR('+qid(hc.name)+' / '+bw0+') * '+bw0+' AS bin_start,\n       COUNT(*) AS frequency\nFROM '+T+W+'\nGROUP BY 1\nORDER BY 1;';
   res.chart={type:'hist',bins:hb,xName:hc.name};res.stats=hs;return res;}
  if(k==='rate'){var gc=D.cols[spec.group],bc=D.cols[spec.bin],pv=spec.pos,acc=new Map(),hit=0,tot=0;
-  idx.forEach(function(i){var g=gc.values[i],v=bc.values[i];if(v==null)return;if(g==null)g='(missing)';if(!acc.has(g))acc.set(g,[0,0]);var a=acc.get(g);a[1]++;tot++;if(v===pv){a[0]++;hit++;}});
+  idx.forEach(function(i){var g=gc.values[i],v=bc.values[i];if(!ok(v))return;if(!ok(g))g='(missing)';if(!acc.has(g))acc.set(g,[0,0]);var a=acc.get(g);a[1]++;tot++;if(v===pv){a[0]++;hit++;}});
   var ri=Array.from(acc.entries()).map(function(e){return{label:String(e[0]),key:e[0],value:e[1][0]/e[1][1]*100,n:e[1][1]};}).sort(function(a,b){return spec.sort==='asc'?a.value-b.value:b.value-a.value;});
   var overall=tot?hit/tot*100:0,f1=ri[0],fz=ri[ri.length-1],lbl='% with '+bc.name+' = '+pv;
   res.say='<b>'+esc(f1.label)+'</b> has the '+(spec.sort==='asc'?'lowest':'highest')+' rate of '+esc(bc.name)+' = '+esc(pv)+filterText(F)+': <b>'+f1.value.toFixed(1)+'%</b>, compared with '+overall.toFixed(1)+'% overall.'+(ri.length>1?' '+(spec.sort==='asc'?'Highest':'Lowest')+': '+esc(fz.label)+' ('+fz.value.toFixed(1)+'%).':'')+(ri.length>1&&fz.value>0?'<span class="note">That is a gap of '+Math.abs(f1.value-fz.value).toFixed(1)+' percentage points between the top and bottom groups.</span>':'');
   res.sql='SELECT '+qid(gc.name)+',\n       AVG(CASE WHEN '+qid(bc.name)+" = '"+String(pv).replace(/'/g,"''")+"' THEN 1.0 ELSE 0 END) * 100 AS pct_"+sqlName(String(pv))+',\n       COUNT(*) AS n\nFROM '+T+W+'\nGROUP BY '+qid(gc.name)+'\nORDER BY 2 '+(spec.sort==='asc'?'ASC':'DESC')+';';
   res.chart={type:'bar',items:ri.slice(0,spec.limit||20),label:lbl,pctMode:true};res.table={head:[gc.name,lbl,'rows'],rows:ri.map(function(d){return[d.label,d.value.toFixed(1)+'%',d.n.toLocaleString()];})};return res;}
- if(k==='share'){var sc=D.cols[spec.group],cnt=new Map();idx.forEach(function(i){var v=sc.values[i];if(v==null)v='(missing)';cnt.set(v,(cnt.get(v)||0)+1);});
+ if(k==='share'){var sc=D.cols[spec.group],cnt=new Map();idx.forEach(function(i){var v=sc.values[i];if(!ok(v))v='(missing)';cnt.set(v,(cnt.get(v)||0)+1);});
   var its=Array.from(cnt.entries()).map(function(e){return{label:String(e[0]),value:e[1]/idx.length,n:e[1]};}).sort(function(a,b){return b.value-a.value;});
   var target=spec.target!=null?its.find(function(d){return d.label===String(spec.target);}):null;
   res.say=target?'<b>'+pct(target.value)+'</b> of rows'+filterText(F)+' have '+esc(sc.name)+' = <b>'+esc(target.label)+'</b> ('+target.n.toLocaleString()+' of '+idx.length.toLocaleString()+').':'<b>'+esc(its[0].label)+'</b> is the most common '+esc(sc.name)+filterText(F)+' at <b>'+pct(its[0].value)+'</b> of rows'+(its[1]?', followed by '+esc(its[1].label)+' ('+pct(its[1].value)+')':'')+'.';
@@ -382,9 +436,9 @@ function run(spec){
  return res;
 }
 function posVal(c){var t=c.stats.top.map(function(e){return e[0];});var p=t.find(function(v){return /^(yes|true|y|t|1)$/i.test(String(v));});return p!=null?p:t[t.length-1];}
-function numStats(vals){var v=vals.filter(function(x){return x!=null;});return colStats({type:'number',values:v},v.length);}
+function numStats(vals){var v=vals.filter(ok);return colStats({type:'number',values:v},v.length);}
 function skewText(st,name){if(!st||!st.sd)return'';if(st.skew>0.3)return'The average is pulled up by a few high values (right-skewed), so the median ('+fullNum(st.median)+') better describes a typical '+esc(name)+'.';if(st.skew<-0.3)return'A few low values pull the average down (left-skewed).';return'The values are fairly evenly spread around the middle.';}
-function histogram(vals,bins){var v=vals.filter(function(x){return x!=null;});if(!v.length)return[];var mn=Math.min.apply(null,v),mx=Math.max.apply(null,v);if(mn===mx){return[{lo:mn,hi:mx,count:v.length}];}
+function histogram(vals,bins){var v=vals.filter(ok);if(!v.length)return[];var mn=arrMin(v),mx=arrMax(v);if(mn===mx){return[{lo:mn,hi:mx,count:v.length}];}
  var step=niceStep((mx-mn)/bins),start=Math.floor(mn/step)*step,k=Math.ceil((mx-start)/step+1e-9);if(start+k*step<=mx)k++;var out=[];for(var i=0;i<k;i++)out.push({lo:+(start+i*step).toFixed(10),hi:+(start+(i+1)*step).toFixed(10),count:0});
  v.forEach(function(x){var i=Math.min(k-1,Math.floor((x-start)/step));out[i].count++;});return out;}
 
@@ -397,12 +451,12 @@ function barPath(x0,x1,y,h,r){if(Math.abs(x1-x0)<2*r)r=Math.abs(x1-x0)/2;var d=x
 function draw(el,ch){
  el.innerHTML='';if(!ch)return;var W=Math.max(280,el.clientWidth||600);
  if(ch.type==='value'){el.innerHTML='<div style="font-size:40px;font-weight:650;padding:18px 0 4px;font-variant-numeric:tabular-nums">'+esc(ch.value)+'</div><div class="label">'+esc(ch.label)+'</div>';return;}
- if(ch.type==='bar'){var it=ch.items,rowH=30,lw=Math.min(170,Math.max(70,Math.max.apply(null,it.map(function(d){return d.label.length;}))*6.6+12)),vw=64,H=it.length*rowH+6,vals=it.map(function(d){return d.value;}),mn=Math.min(0,Math.min.apply(null,vals)),mx=Math.max(0,Math.max.apply(null,vals));if(mx===mn)mx=mn+1;
+ if(ch.type==='bar'){var it=ch.items,rowH=30,lw=Math.min(170,Math.max(70,arrMax(it.map(function(d){return d.label.length;}))*6.6+12)),vw=64,H=it.length*rowH+6,vals=it.map(function(d){return d.value;}),mn=Math.min(0,arrMin(vals)),mx=Math.max(0,arrMax(vals));if(mx===mn)mx=mn+1;
   var pw=W-lw-vw-6,X=function(v){return lw+(v-mn)/(mx-mn)*pw;},s='<svg width="'+W+'" height="'+H+'" role="img" aria-label="'+esc(ch.label)+' bar chart">';
   it.forEach(function(d,i){var y=i*rowH+4,lab=d.label.length>26?d.label.slice(0,25)+'…':d.label;s+='<text class="cat" x="'+(lw-8)+'" y="'+(y+15)+'" text-anchor="end">'+esc(lab)+'</text><path d="'+barPath(X(0),X(d.value),y+3,17,4)+'" fill="var(--s1)"/><text class="val" x="'+(Math.max(X(0),X(d.value))+6)+'" y="'+(y+15)+'">'+(ch.pctMode?d.value.toFixed(1)+'%':fmtNum(d.value))+'</text><rect class="h" data-i="'+i+'" x="0" y="'+y+'" width="'+W+'" height="'+rowH+'" fill="transparent"/>';});
   s+='</svg>';el.innerHTML=s;el.querySelectorAll('.h').forEach(function(r){r.addEventListener('mousemove',function(e){var d=it[+r.dataset.i];showTip('<div class="t">'+esc(d.label)+'</div>'+trow(ch.label,ch.pctMode?d.value.toFixed(1)+'%':fullNum(d.value))+(d.n!=null?trow('Rows',d.n.toLocaleString()):''),e.clientX,e.clientY);});r.addEventListener('mouseleave',hideTip);});return;}
  var H2=ch.height||280,m={l:58,r:16,t:12,b:40},pw2=W-m.l-m.r,ph=H2-m.t-m.b,s2='<svg width="'+W+'" height="'+H2+'" role="img" aria-label="chart">';
- if(ch.type==='line'){var n=ch.values.length,tk=niceTicks(Math.min(0,Math.min.apply(null,ch.values)),Math.max.apply(null,ch.values),5),y0=tk[0],y1=tk[tk.length-1];
+ if(ch.type==='line'){var n=ch.values.length,tk=niceTicks(Math.min(0,arrMin(ch.values)),arrMax(ch.values),5),y0=tk[0],y1=tk[tk.length-1];
   var X2=function(i){return m.l+(n<=1?pw2/2:i*pw2/(n-1));},Y=function(v){return m.t+ph-(v-y0)/(y1-y0)*ph;};
   tk.forEach(function(t){s2+='<line class="grid" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+Y(t)+'" y2="'+Y(t)+'"/><text class="axis-label" x="'+(m.l-8)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+fmtNum(t)+'</text>';});
   var ev=Math.max(1,Math.ceil(n/Math.max(2,Math.floor(pw2/80))));for(var i=0;i<n;i+=ev)s2+='<text class="axis-label" x="'+X2(i)+'" y="'+(H2-22)+'" text-anchor="middle">'+esc(ch.labels[i])+'</text>';
@@ -412,7 +466,7 @@ function draw(el,ch){
   el.innerHTML=s2;var sv=el.querySelector('svg'),xh=sv.querySelector('.xhair'),dot=sv.querySelector('.dot');
   sv.querySelector('.hit').addEventListener('mousemove',function(e){var r=sv.getBoundingClientRect(),i=Math.max(0,Math.min(n-1,Math.round((e.clientX-r.left-m.l)/pw2*(n-1))));xh.setAttribute('x1',X2(i));xh.setAttribute('x2',X2(i));xh.setAttribute('visibility','visible');dot.setAttribute('cx',X2(i));dot.setAttribute('cy',Y(ch.values[i]));dot.setAttribute('visibility','visible');showTip('<div class="t">'+esc(ch.labels[i])+'</div>'+trow(ch.label,fullNum(ch.values[i])),e.clientX,e.clientY);});
   sv.querySelector('.hit').addEventListener('mouseleave',function(){xh.setAttribute('visibility','hidden');dot.setAttribute('visibility','hidden');hideTip();});return;}
- if(ch.type==='hist'){var b=ch.bins,mxc=Math.max.apply(null,b.map(function(x){return x.count;})),tk2=niceTicks(0,mxc,4),Y2=function(v){return m.t+ph-v/tk2[tk2.length-1]*ph;},bw=pw2/b.length;
+ if(ch.type==='hist'){var b=ch.bins,mxc=arrMax(b.map(function(x){return x.count;})),tk2=niceTicks(0,mxc,4),Y2=function(v){return m.t+ph-v/tk2[tk2.length-1]*ph;},bw=pw2/b.length;
   tk2.forEach(function(t){s2+='<line class="grid" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+Y2(t)+'" y2="'+Y2(t)+'"/><text class="axis-label" x="'+(m.l-8)+'" y="'+(Y2(t)+4)+'" text-anchor="end">'+fmtNum(t)+'</text>';});
   var ev2=Math.max(1,Math.ceil(b.length/Math.max(2,Math.floor(pw2/60))));
   b.forEach(function(x,i){var x0=m.l+i*bw+1,h=ph-(Y2(x.count)-m.t),top=Y2(x.count);if(x.count>0)s2+='<path d="M'+x0+','+(m.t+ph)+'V'+(top+Math.min(4,h))+'Q'+x0+','+top+' '+(x0+Math.min(4,(bw-2)/2))+','+top+'H'+(x0+bw-2-Math.min(4,(bw-2)/2))+'Q'+(x0+bw-2)+','+top+' '+(x0+bw-2)+','+(top+Math.min(4,h))+'V'+(m.t+ph)+'Z" fill="var(--s1)"/>';
@@ -420,7 +474,7 @@ function draw(el,ch){
    s2+='<rect class="h" data-i="'+i+'" x="'+(m.l+i*bw)+'" y="'+m.t+'" width="'+bw+'" height="'+ph+'" fill="transparent"/>';});
   s2+='<text class="ttl" x="'+(m.l+pw2/2)+'" y="'+(H2-4)+'" text-anchor="middle">'+esc(ch.xName)+'</text><text class="ttl" x="12" y="'+(m.t+ph/2)+'" transform="rotate(-90 12 '+(m.t+ph/2)+')" text-anchor="middle">Frequency</text></svg>';
   el.innerHTML=s2;el.querySelectorAll('.h').forEach(function(r){r.addEventListener('mousemove',function(e){var x=b[+r.dataset.i];showTip('<div class="t">'+fullNum(x.lo)+' – '+fullNum(x.hi)+'</div>'+trow('Rows',x.count.toLocaleString()),e.clientX,e.clientY);});r.addEventListener('mouseleave',hideTip);});return;}
- if(ch.type==='scatter'){var xs=ch.xs,ys=ch.ys,N=xs.length,step=Math.max(1,Math.ceil(N/2500));var xmin=Math.min.apply(null,xs),xmax=Math.max.apply(null,xs),ymin=Math.min.apply(null,ys),ymax=Math.max.apply(null,ys);
+ if(ch.type==='scatter'){var xs=ch.xs,ys=ch.ys,N=xs.length,step=Math.max(1,Math.ceil(N/2500));var xmin=arrMin(xs),xmax=arrMax(xs),ymin=arrMin(ys),ymax=arrMax(ys);
   var tx=niceTicks(xmin,xmax,6),ty=niceTicks(ymin,ymax,5),X3=function(v){return m.l+(v-tx[0])/(tx[tx.length-1]-tx[0])*pw2;},Y3=function(v){return m.t+ph-(v-ty[0])/(ty[ty.length-1]-ty[0])*ph;};
   ty.forEach(function(t){s2+='<line class="grid" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+Y3(t)+'" y2="'+Y3(t)+'"/><text class="axis-label" x="'+(m.l-8)+'" y="'+(Y3(t)+4)+'" text-anchor="end">'+fmtNum(t)+'</text>';});
   tx.forEach(function(t){s2+='<text class="axis-label" x="'+X3(t)+'" y="'+(H2-22)+'" text-anchor="middle">'+fmtNum(t)+'</text>';});
@@ -446,7 +500,7 @@ function matchCols(q){var cand=[];D.cols.forEach(function(c,j){var cn=norm(c.nam
   if(pos>=0){cand.push({j:j,pos:pos,score:10+cn.length,span:[pos,pos+cn.length+1]});return;}
   var toks=cn.split(' ').filter(function(t){return t.length>=3&&!STOP.has(t);}),hits=[];
   toks.forEach(function(t){var p=wordAt(q,t);if(p<0&&t.length>4&&/s$/.test(t))p=wordAt(q,t.slice(0,-1));if(p>=0)hits.push(p);});
-  if(hits.length)cand.push({j:j,pos:Math.min.apply(null,hits),score:hits.length/toks.length*5,hits:hits});});
+  if(hits.length)cand.push({j:j,pos:arrMin(hits),score:hits.length/toks.length*5,hits:hits});});
  cand.sort(function(a,b){return b.score-a.score;});var claimed=[],kept=[];
  cand.forEach(function(c){var pts=c.span?[c.pos]:c.hits,free=pts.filter(function(p){return!claimed.some(function(r){return p>=r[0]&&p<r[1];});});if(!free.length)return;kept.push(c);if(c.span)claimed.push(c.span);else c.hits.forEach(function(p){claimed.push([p,p+1]);});});
  return kept.sort(function(a,b){return a.pos-b.pos;});}
@@ -513,11 +567,11 @@ function interpret(question){
  return null;
  function finish(s,label){s.label=label;s.notes=notes;return s;}
 }
-function answer(question){
+function answer(question,fromHistory){
  var box=$('answer'),say=$('say');box.classList.add('show');['a-chart','a-stats','a-table'].forEach(function(id){$(id).innerHTML='';});
  var spec=interpret(question);
- if(!spec){say.innerHTML='I couldn’t match that question to any columns in this dataset. Try including a column name, e.g. <b>'+esc(suggestions()[0]||'')+'</b>. Columns: '+D.cols.map(function(c){return'<code>'+esc(c.name)+'</code>';}).join(', ')+'.';$('a-sql').textContent='-- no query generated';$('a-interp').innerHTML='';return;}
- if(spec.kind==='overview'){say.innerHTML='This dataset has <b>'+D.n.toLocaleString()+' rows</b> and <b>'+D.cols.length+' columns</b>. The automatic insights below summarize what stands out.';$('a-sql').textContent='SELECT COUNT(*) FROM '+D.table+';';$('a-interp').innerHTML='Analysis: dataset overview';return;}
+ if(!spec){say.innerHTML='I couldn’t match that question to any columns in this dataset. Try including a column name, e.g. <b>'+esc(suggestions()[0]||'')+'</b>. Columns: '+D.cols.map(function(c){return'<code>'+esc(c.name)+'</code>';}).join(', ')+'.';$('a-sql').textContent='-- no query generated';$('a-interp').innerHTML='';lastAnswer=question;record(question,'No match',fromHistory);return;}
+ if(spec.kind==='overview'){say.innerHTML='This dataset has <b>'+D.n.toLocaleString()+' rows</b> and <b>'+D.cols.length+' columns</b>. The automatic insights below summarize what stands out.';$('a-sql').textContent='SELECT COUNT(*) FROM '+D.table+';';$('a-interp').innerHTML='Analysis: dataset overview';lastAnswer=question;record(question,'Dataset overview',fromHistory);return;}
  var res=run(spec);
  say.innerHTML=(res.say||'')+(spec.notes&&spec.notes.length?'<span class="note">'+spec.notes.join(' ')+'</span>':'');
  $('a-sql').textContent=res.sql||'';
@@ -528,9 +582,26 @@ function answer(question){
  if(spec.x!=null)im.push('Column'+(spec.y!=null?'s':'')+': <b>'+esc(D.cols[spec.x].name)+'</b>'+(spec.y!=null?' and <b>'+esc(D.cols[spec.y].name)+'</b>':''));
  im.push('Filters: <b>'+(spec.filters.length?filterText(spec.filters).replace(/^ \(where |\)$/g,''):'none')+'</b>');im.push('Rows used: <b>'+(res.n||0).toLocaleString()+'</b> of '+D.n.toLocaleString());
  $('a-interp').innerHTML=im.join('<br>');
- draw($('a-chart'),res.chart);$('a-stats').innerHTML=statsHTML(res.stats,res.statsList);$('a-table').innerHTML=tableHTML(res.table);lastAnswer=question;
+ draw($('a-chart'),res.chart);$('a-stats').innerHTML=statsHTML(res.stats,res.statsList);$('a-table').innerHTML=tableHTML(res.table);lastAnswer=question;record(question,spec.label,fromHistory,res.say);
 }
-var lastAnswer=null;
+var lastAnswer=null,HIST=[],hCur=-1;
+function plain(h){var d=document.createElement('div');d.innerHTML=h||'';var t=(d.textContent||'').replace(/\s+/g,' ').trim();var m=t.match(/^.*?[.!?](\s|$)/);t=m?m[0].trim():t;return t.length>110?t.slice(0,107)+'…':t;}
+function histKey(){return'ayd-history:'+D.name+':'+D.n;}
+function saveHist(){try{localStorage.setItem(histKey(),JSON.stringify(HIST.slice(-50)));}catch(e){}}
+function loadHist(){HIST=[];hCur=-1;try{var h=JSON.parse(localStorage.getItem(histKey())||'[]');if(Array.isArray(h))HIST=h;}catch(e){}renderHist();}
+function record(q,label,fromHistory,say){if(fromHistory){renderHist();return;}
+ var i=HIST.findIndex(function(h){return h.q.toLowerCase()===q.toLowerCase();});if(i>=0)HIST.splice(i,1);
+ var now=new Date();HIST.push({q:q,label:label||'',sum:say?plain(say):label,t:now.getHours()%12+(now.getHours()%12?0:12)+':'+String(now.getMinutes()).padStart(2,'0')+(now.getHours()<12?' AM':' PM')});
+ hCur=HIST.length-1;saveHist();renderHist();}
+function renderHist(){var ol=$('h-list');$('h-count').textContent=HIST.length?HIST.length+' saved':'';
+ if(!HIST.length){ol.innerHTML='<li class="empty">Your questions will appear here. Click any one to see its answer again.</li>';}
+ else ol.innerHTML=HIST.map(function(h,i){return{h:h,i:i};}).reverse().map(function(o){return'<li><button type="button" data-i="'+o.i+'"'+(o.i===hCur?' aria-current="true"':'')+'><span class="hq">'+(o.i+1)+'. '+esc(o.h.q)+'</span><span class="hs">'+esc(o.h.sum||'')+'</span><span class="hm">'+esc(o.h.label)+' · '+esc(o.h.t)+'</span></button></li>';}).join('');
+ ol.querySelectorAll('button[data-i]').forEach(function(b){b.addEventListener('click',function(){showHist(+b.dataset.i);});});
+ $('h-older').disabled=hCur<=0;$('h-newer').disabled=hCur<0||hCur>=HIST.length-1;$('h-clear').disabled=!HIST.length;}
+function showHist(i){if(i<0||i>=HIST.length)return;hCur=i;$('ask').value=HIST[i].q;answer(HIST[i].q,true);}
+$('h-older').addEventListener('click',function(){showHist(hCur-1);});
+$('h-newer').addEventListener('click',function(){showHist(hCur+1);});
+$('h-clear').addEventListener('click',function(){HIST=[];hCur=-1;saveHist();renderHist();});
 
 // ============ Suggestions & insights ============
 var PRI=['revenue','sales','salary','profit','income','spend','amount','price','cost','bill','tip','score','rating','conversions','quantity','clicks','units'];
@@ -558,15 +629,16 @@ function suggestions(){var P=pickCols(),o=[],nm=function(j){return D.cols[j].nam
  return o.slice(0,8);}
 function insights(){var out=[],P=pickCols();
  var nT=D.cols.filter(function(c){return c.type==='number';}).length,tT=D.cols.filter(function(c){return c.type==='text';}).length,dT=D.cols.filter(function(c){return c.type==='date';}).length;
- out.push(['Shape','<b>'+D.n.toLocaleString()+'</b> rows and <b>'+D.cols.length+'</b> columns: '+nT+' numeric, '+tT+' text/category'+(dT?', '+dT+' date':'')+'.'+(D.capped?' Only the first 50,000 rows were loaded.':'')]);
+ out.push(['Shape','<b>'+D.n.toLocaleString()+'</b> rows and <b>'+D.cols.length+'</b> columns: '+nT+' numeric, '+tT+' text/category'+(dT?', '+dT+' date':'')+'.'+(D.capped?' Only the first '+MAXROWS.toLocaleString()+' rows were loaded.':'')]);
  var miss=D.cols.filter(function(c){return c.stats.missing>0;}).sort(function(a,b){return b.stats.missing-a.stats.missing;});
+ var badc=D.cols.filter(function(c){return c.bad>0;});if(badc.length)out.push(['Data quality',badc.map(function(c){return c.bad.toLocaleString()+' values in <b>'+esc(c.name)+'</b> couldn’t be read as '+(c.type==='number'?'numbers':'dates');}).join('; ')+'. They were treated as missing.','warn']);
  if(miss.length)out.push(['Data quality',miss.slice(0,3).map(function(c){return'<b>'+esc(c.name)+'</b> is missing '+pct(c.stats.missing/D.n);}).join('; ')+(miss.length>3?'; plus '+(miss.length-3)+' more columns with gaps':'')+'. Missing values are left out of calculations.','warn']);
  else out.push(['Data quality','No missing values: every column is complete.']);
- if(P.num.length>=2){var best=null;for(var a=0;a<P.num.length&&a<14;a++)for(var b=a+1;b<P.num.length&&b<14;b++){var xs=[],ys=[],ca=D.cols[P.num[a]].values,cb=D.cols[P.num[b]].values;for(var i=0;i<D.n;i++)if(ca[i]!=null&&cb[i]!=null){xs.push(ca[i]);ys.push(cb[i]);}var p=pearson(xs,ys);if(p&&(!best||Math.abs(p.r)>Math.abs(best.r)))best={r:p.r,a:P.num[a],b:P.num[b]};}
+ if(P.num.length>=2){var best=null;for(var a=0;a<P.num.length&&a<14;a++)for(var b=a+1;b<P.num.length&&b<14;b++){var xs=[],ys=[],ca=D.cols[P.num[a]].values,cb=D.cols[P.num[b]].values;var stp=Math.max(1,Math.floor(D.n/200000));for(var i=0;i<D.n;i+=stp)if(ok(ca[i])&&ok(cb[i])){xs.push(ca[i]);ys.push(cb[i]);}var p=pearson(xs,ys);if(p&&(!best||Math.abs(p.r)>Math.abs(best.r)))best={r:p.r,a:P.num[a],b:P.num[b]};}
   if(best)out.push(['Correlation','The strongest relationship is between <b>'+esc(D.cols[best.a].name)+'</b> and <b>'+esc(D.cols[best.b].name)+'</b>: '+strength(best.r)+' '+(best.r>=0?'positive':'negative')+' (r = '+best.r.toFixed(2)+'). '+(Math.abs(best.r)>=0.4?'They tend to move '+(best.r>=0?'together.':'in opposite directions.'):'Most numeric columns move fairly independently.')]);}
- P.cat.slice(0,2).forEach(function(j){var c=D.cols[j],t=c.stats.top;if(t&&t.length>1)out.push(['Category','The most common <b>'+esc(c.name)+'</b> is <b>'+esc(t[0][0])+'</b> ('+pct(t[0][1]/c.stats.count)+' of rows), across '+c.stats.unique+' distinct values.']);});
+ P.cat.slice(0,2).forEach(function(j){var c=D.cols[j],t=c.stats.top;if(t&&t.length>1)out.push(['Category','The most common <b>'+esc(c.name)+'</b> is <b>'+esc(t[0][0])+'</b> ('+pct(t[0][1]/c.stats.count)+' of rows), across '+fmtUnique(c.stats)+' distinct values.']);});
  if(P.num.length){var sk=P.num.map(function(j){return{j:j,s:D.cols[j].stats};}).sort(function(a,b){return Math.abs(b.s.skew)-Math.abs(a.s.skew);})[0];if(Math.abs(sk.s.skew)>0.3)out.push(['Distribution','<b>'+esc(D.cols[sk.j].name)+'</b> is '+(sk.s.skew>0?'right':'left')+'-skewed: average '+fullNum(sk.s.mean)+' vs. median '+fullNum(sk.s.median)+'. '+(sk.s.skew>0?'A few large values pull the average up.':'A few small values pull the average down.')]);
-  var ol=P.num.map(function(j){return{j:j,o:D.cols[j].stats.outliers};}).sort(function(a,b){return b.o-a.o;})[0];if(ol.o>0)out.push(['Outliers','<b>'+esc(D.cols[ol.j].name)+'</b> has '+ol.o+' outlier'+(ol.o>1?'s':'')+' ('+pct(ol.o/D.n)+' of rows) '+(function(st){var lo=st.q1-1.5*(st.q3-st.q1),hi=st.q3+1.5*(st.q3-st.q1);return lo<st.min?'above '+fullNum(hi)+', the upper edge of the typical range':'outside the typical range of '+fullNum(lo)+' to '+fullNum(hi);})(D.cols[ol.j].stats)+'. Worth checking whether they are errors or real extremes.','warn']);}
+  var ol=P.num.map(function(j){return{j:j,o:D.cols[j].stats.outliers};}).sort(function(a,b){return b.o-a.o;})[0];if(ol.o>0)out.push(['Outliers','<b>'+esc(D.cols[ol.j].name)+'</b> has '+ol.o.toLocaleString()+' outlier'+(ol.o>1?'s':'')+' ('+pct(ol.o/D.n)+' of rows) '+(function(st){var lo=st.q1-1.5*(st.q3-st.q1),hi=st.q3+1.5*(st.q3-st.q1);return lo<st.min?'above '+fullNum(hi)+', the upper edge of the typical range':'outside the typical range of '+fullNum(lo)+' to '+fullNum(hi);})(D.cols[ol.j].stats)+'. Worth checking whether they are errors or real extremes.','warn']);}
  if(P.cat[0]!=null&&(P.add[0]!=null||P.num[0]!=null)){var mj=P.add[0]!=null?P.add[0]:P.num[0],r=run({kind:'group',group:P.cat[0],measure:mj,agg:defaultAgg(D.cols[mj]),filters:[],sort:'desc'});if(r.items&&r.items.length>1){var t0=r.items[0],tl=r.items[r.items.length-1];out.push(['Comparison','By '+esc(D.cols[P.cat[0]].name)+', <b>'+esc(t0.label)+'</b> leads in '+AGGW[defaultAgg(D.cols[mj])]+' '+esc(D.cols[mj].name)+' ('+fmtNum(t0.value)+') and <b>'+esc(tl.label)+'</b> trails ('+fmtNum(tl.value)+').']);}}
  if(P.date>=0){var dc=D.cols[P.date];out.push(['Time range','<b>'+esc(dc.name)+'</b> covers '+fmtDate(dc.stats.min,'day')+' to '+fmtDate(dc.stats.max,'day')+' ('+Math.round((dc.stats.max-dc.stats.min)/864e5).toLocaleString()+' days).']);}
  $('insights').innerHTML=out.map(function(o){return'<li><span class="tag'+(o[2]?' warn':'')+'">'+(o[2]?'⚠ ':'')+o[0]+'</span><div>'+o[1]+'</div></li>';}).join('');}
@@ -603,11 +675,11 @@ document.querySelectorAll('#b-type button').forEach(function(b){b.addEventListen
 document.querySelectorAll('#b-sort button').forEach(function(b){b.addEventListener('click',function(){B.sort=b.dataset.s;document.querySelectorAll('#b-sort button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});buildChart();});});
 
 // ============ Profile, preview, KPIs ============
-function cell(c,v){if(v==null)return'<span style="color:var(--muted)">—</span>';if(c.type==='number')return fullNum(v);if(c.type==='date')return fmtDate(v,'day');return esc(v);}
+function cell(c,v){if(!ok(v))return'<span style="color:var(--muted)">—</span>';if(c.type==='number')return fullNum(v);if(c.type==='date')return fmtDate(v,'day');return esc(v);}
 function renderProfile(){var h='<thead><tr><th>Column</th><th>Type</th><th>Missing</th><th class="n">Unique</th><th>Summary</th></tr></thead><tbody>';
  D.cols.forEach(function(c){var st=c.stats,sm='';if(c.type==='number')sm='avg '+fullNum(st.mean)+' · median '+fullNum(st.median)+' · range '+fullNum(st.min)+' to '+fullNum(st.max);else if(c.type==='date')sm=fmtDate(st.min,'day')+' → '+fmtDate(st.max,'day');else sm='top: '+st.top.slice(0,3).map(function(e){return esc(e[0])+' ('+e[1]+')';}).join(', ');
   if(c.idlike)sm+=' <span class="type">identifier</span>';
-  h+='<tr><td><b>'+esc(c.name)+'</b></td><td><span class="type">'+c.type+'</span></td><td><span class="miss-bar"><i style="width:'+(st.missing/D.n*100)+'%"></i></span>'+pct(st.missing/D.n)+'</td><td class="n">'+st.unique.toLocaleString()+'</td><td>'+sm+'</td></tr>';});
+  h+='<tr><td><b>'+esc(c.name)+'</b></td><td><span class="type">'+c.type+'</span></td><td><span class="miss-bar"><i style="width:'+(st.missing/D.n*100)+'%"></i></span>'+pct(st.missing/D.n)+'</td><td class="n">'+fmtUnique(st)+'</td><td>'+sm+'</td></tr>';});
  $('profile').innerHTML=h+'</tbody>';}
 function renderPreview(){var k=Math.min(100,D.n);$('prev-sub').textContent='First '+k+' of '+D.n.toLocaleString()+' rows.';
  var h='<thead><tr>'+D.cols.map(function(c){return'<th'+(c.type==='number'?' class="n"':'')+'>'+esc(c.name)+'</th>';}).join('')+'</tr></thead><tbody>';
@@ -615,34 +687,58 @@ function renderPreview(){var k=Math.min(100,D.n);$('prev-sub').textContent='Firs
 function renderKPIs(){var miss=D.cols.reduce(function(a,c){return a+c.stats.missing;},0),cells=D.n*D.cols.length;
  var k=[['Rows',D.n.toLocaleString()],['Columns',D.cols.length],['Numeric',D.cols.filter(function(c){return c.type==='number';}).length],['Text / category',D.cols.filter(function(c){return c.type==='text';}).length],['Date',D.cols.filter(function(c){return c.type==='date';}).length],['Completeness',pct(1-miss/cells)]];
  $('kpis').innerHTML=k.map(function(x){return'<div class="kpi"><div class="k">'+x[0]+'</div><div class="v">'+x[1]+'</div></div>';}).join('');}
-function onLoaded(){$('app').classList.remove('hidden');$('dsname').innerHTML='Dataset: <b>'+esc(D.name)+'</b> · SQL table name: <code>'+esc(D.table)+'</code>';
+function onLoaded(){$('app').classList.remove('hidden');$('dsname').innerHTML='Dataset: <b>'+esc(D.name)+'</b> · SQL table name: <code>'+esc(D.table)+'</code> · Look over the rows and summary numbers first, then read the insights below.';
  renderKPIs();insights();renderProfile();renderPreview();fillBuilder();buildChart();
  var sg=$('suggest');sg.innerHTML='';suggestions().forEach(function(s){var b=document.createElement('button');b.className='chip';b.type='button';b.textContent=s;b.addEventListener('click',function(){$('ask').value=s;answer(s);});sg.appendChild(b);});
- $('answer').classList.remove('show');$('ask').value='';lastAnswer=null;
- status('ok','Loaded <b>'+esc(D.name)+'</b>: '+D.n.toLocaleString()+' rows × '+D.cols.length+' columns.');}
+ $('answer').classList.remove('show');$('ask').value='';lastAnswer=null;loadHist();
+ status('ok','Loaded <b>'+esc(D.name)+'</b>: '+D.n.toLocaleString()+' rows × '+D.cols.length+' columns'+(D.capped?' (first '+MAXROWS.toLocaleString()+' rows)':'')+(loadSecs>=0.5?' in '+loadSecs.toFixed(1)+' s':'')+'.');}
 $('ask-form').addEventListener('submit',function(e){e.preventDefault();var v=$('ask').value.trim();if(v&&D)answer(v);});
 
 // ============ Loading ============
 function status(kind,msg){var s=$('status');s.className='status show '+kind;s.innerHTML=msg;}
-function loadText(text,name){try{var rows,tt=text.trim();
-  if(tt[0]==='['||tt[0]==='{'){var j=JSON.parse(tt);if(!Array.isArray(j)){var key=Object.keys(j).find(function(k){return Array.isArray(j[k]);});j=key?j[key]:[j];}
-   var keys=[];j.forEach(function(o){Object.keys(o||{}).forEach(function(k){if(keys.indexOf(k)<0)keys.push(k);});});rows=[keys].concat(j.map(function(o){return keys.map(function(k){var v=o[k];return v==null?'':typeof v==='object'?JSON.stringify(v):String(v);});}));}
-  else{if(/^\s*<(!doctype|html)/i.test(tt))throw new Error('That link returned a web page, not a data file. Use the direct (raw) link to the .csv file.');rows=parseCSV(text);}
-  if(rows.length<2)throw new Error('No data rows found.');build(rows,name);}
- catch(e){status('err','Couldn’t read that data: '+esc(e.message));}}
+var busy=false,loadSecs=0;
+function tick(){return new Promise(function(r){setTimeout(r,0);});}
+function mb(b){return b>=1e9?(b/1e9).toFixed(2)+' GB':(b/1e6).toFixed(b>=1e8?0:1)+' MB';}
+function progress(name,frac,rows,bytes){status('ok','Reading <b>'+esc(name)+'</b>… '+(frac!=null?Math.round(frac*100)+'% · ':'')+(bytes?mb(bytes)+' · ':'')+rows.toLocaleString()+' rows so far'+(frac!=null?'<div class="pbar"><i style="width:'+(frac*100).toFixed(1)+'%"></i></div>':''));}
+function finalize(L,name,t0){var cols=L.finish();status('ok','Profiling <b>'+esc(name)+'</b> ('+L.n.toLocaleString()+' rows)…');loadSecs=(performance.now()-t0)/1000;buildFromCols(cols,L.n,name,L.trunc);}
+function rowsFromJSON(text){var j=JSON.parse(text);if(!Array.isArray(j)){var key=Object.keys(j).find(function(k){return Array.isArray(j[k]);});j=key?j[key]:[j];}
+ var keys=[];j.forEach(function(o){Object.keys(o||{}).forEach(function(k){if(keys.indexOf(k)<0)keys.push(k);});});
+ return[keys].concat(j.map(function(o){return keys.map(function(k){var v=o&&o[k];return v==null?'':typeof v==='object'?JSON.stringify(v):String(v);});}));}
+function loadText(text,name){var t0=performance.now();try{var tt=text.slice(0,500).trimStart(),L=new Loader(name);
+  if(tt[0]==='['||tt[0]==='{'){rowsFromJSON(text).forEach(function(r){L.row(r);});}
+  else{if(/^<(!doctype|html)/i.test(tt))throw new Error('That link returned a web page, not a data file. Use the direct (raw) link to the .csv file.');var P=makeParser(function(r){L.row(r);});P.push(text,true);}
+  finalize(L,name,t0);}catch(e){status('err','Couldn’t read that data: '+esc(e.message));}}
+async function loadFile(f){if(!f||busy)return;busy=true;var t0=performance.now();
+ try{if(/\.json$/i.test(f.name)){if(f.size>150e6)throw new Error('JSON files over 150 MB aren’t supported. Save the data as CSV instead; CSV has no size limit here.');progress(f.name,null,0,f.size);await tick();loadText(await f.text(),f.name);return;}
+  var L=new Loader(f.name),P=makeParser(function(r){L.row(r);}),dec=new TextDecoder('utf-8'),CH=8*1024*1024,pos=0;
+  while(pos<f.size&&!L.trunc){var ab=await f.slice(pos,Math.min(f.size,pos+CH)).arrayBuffer();pos+=ab.byteLength;
+   var txt=dec.decode(ab,{stream:pos<f.size});if(pos===ab.byteLength&&/^\s*<(!doctype|html)/i.test(txt.slice(0,200)))throw new Error('That file is a web page, not a data file.');
+   P.push(txt,false);progress(f.name,pos/f.size,L.n,f.size);await tick();}
+  P.push(dec.decode(),true);await tick();finalize(L,f.name,t0);}
+ catch(e){status('err','Couldn’t read that file: '+esc(e.message||String(e)));}
+ finally{busy=false;}}
+async function loadURL(u){if(busy)return;busy=true;var t0=performance.now(),name=decodeURIComponent(u.split('?')[0].split('/').pop()||'dataset');
+ try{status('ok','Connecting…');var r;try{r=await fetch(u);}catch(err){throw new Error('NETWORK');}
+  if(!r.ok)throw new Error('The server answered '+r.status+'.');
+  var total=+(r.headers.get('content-length')||0);
+  if(/json/i.test(r.headers.get('content-type')||'')||/\.json$/i.test(name)||!r.body||!r.body.getReader){loadText(await r.text(),name);return;}
+  var L=new Loader(name),P=makeParser(function(rw){L.row(rw);}),dec=new TextDecoder('utf-8'),rd=r.body.getReader(),got=0,firstChunk=true,last=0;
+  while(true){var c=await rd.read();if(c.done)break;got+=c.value.byteLength;var txt=dec.decode(c.value,{stream:true});
+   if(firstChunk){firstChunk=false;if(/^\s*<(!doctype|html)/i.test(txt.slice(0,200)))throw new Error('That link returned a web page, not a data file. Use the direct (raw) link to the .csv file.');}
+   P.push(txt,false);if(L.trunc){try{rd.cancel();}catch(e){}break;}
+   if(got-last>4e6||!total){last=got;progress(name,total?Math.min(1,got/total):null,L.n,got);await tick();}}
+  P.push(dec.decode(),true);finalize(L,name,t0);}
+ catch(e){status('err','Couldn’t load that link. '+(e.message==='NETWORK'?'The website may not allow other pages to load its files, or this viewer blocks outside links.':esc(e.message))+' Download the file and use <b>Upload a file</b> instead.');}
+ finally{busy=false;}}
 $('url-form').addEventListener('submit',function(e){e.preventDefault();var u=$('url').value.trim();if(!u)return;
- u=u.replace(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\//,'https://raw.githubusercontent.com/$1/$2/');
- status('ok','Loading…');
- fetch(u).then(function(r){if(!r.ok)throw new Error('The server answered '+r.status+'.');return r.text();}).then(function(t){loadText(t,decodeURIComponent(u.split('?')[0].split('/').pop()||'dataset'));})
- .catch(function(err){status('err','Couldn’t load that link. '+esc(err.message&&err.message.indexOf('server')>=0?err.message:'The website may not allow other pages to load its files, or this viewer blocks outside links.')+' Download the file and use <b>Upload a file</b> instead.');});});
+ u=u.replace(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\//,'https://raw.githubusercontent.com/$1/$2/');loadURL(u);});
 var LINKS=[['Restaurant tips (244 rows)','https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv'],['Penguins (344 rows)','https://raw.githubusercontent.com/mwaskom/seaborn-data/master/penguins.csv']];
 LINKS.forEach(function(l){var b=document.createElement('button');b.className='chip';b.type='button';b.textContent=l[0];b.addEventListener('click',function(){$('url').value=l[1];$('url-form').requestSubmit();});$('link-examples').appendChild(b);});
 var fileIn=$('file'),drop=$('drop');
-function readFile(f){if(!f)return;if(f.size>60e6){status('err','That file is over 60 MB. Try a smaller extract.');return;}var r=new FileReader();r.onload=function(){loadText(r.result,f.name);};r.onerror=function(){status('err','Couldn’t read that file.');};r.readAsText(f);}
-fileIn.addEventListener('change',function(){readFile(fileIn.files[0]);});
+fileIn.addEventListener('change',function(){loadFile(fileIn.files[0]);fileIn.value='';});
 ['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over');});});
 ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over');});});
-drop.addEventListener('drop',function(e){readFile(e.dataTransfer.files[0]);});
+drop.addEventListener('drop',function(e){loadFile(e.dataTransfer.files[0]);});
 
 // ============ Built-in sample datasets (fictional) ============
 function csv(head,rows){return head.join(',')+'\n'+rows.map(function(r){return r.map(function(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');}
